@@ -1,2 +1,5 @@
 /build/
 /mac/.build/
+/pkgbuild/pkg/
+/pkgbuild/src/
+*.pkg.tar.*

@@ -1,0 +1,12 @@
+#!/bin/sh
+# Builds the Linux half (the reminders command and service) into build/.
+set -eu
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+# Go may come from mise, whose shim fails outside a folder pinning a version
+# (and makepkg's PATH may not have it at all): a real install first.
+for d in "$HOME/.local/share/mise/installs/go/latest/bin" /usr/lib/go/bin /usr/bin; do
+  [ -x "$d/go" ] && PATH="$d:$PATH" && break
+done
+mkdir -p "$ROOT/build"
+(cd "$ROOT/engine" && go build -trimpath -o "$ROOT/build/reminders" .)
+echo "Built $ROOT/build/reminders"

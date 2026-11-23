@@ -1,0 +1,14 @@
+[Unit]
+Description=Reminders: Apple Reminders from a Mac, through Reminders Bridge
+After=network-online.target graphical-session.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/reminders serve
+Restart=on-failure
+RestartSec=20
+Environment=GOMEMLIMIT=30MiB
+Nice=5
+
+[Install]
+WantedBy=default.target

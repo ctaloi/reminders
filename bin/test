@@ -1,0 +1,10 @@
+#!/bin/sh
+# The engine's tests, against a fake bridge (no Mac needed).
+set -eu
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+for d in "$HOME/.local/share/mise/installs/go/latest/bin" /usr/lib/go/bin /usr/bin; do
+  [ -x "$d/go" ] && PATH="$d:$PATH" && break
+done
+cd "$ROOT/engine"
+go vet ./...
+go test -count=1 ./...

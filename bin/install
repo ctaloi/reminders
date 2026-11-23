@@ -1,0 +1,14 @@
+#!/bin/sh
+# Builds and installs the package (the command, the user service, the icon),
+# then (re)starts the service. Set up the Mac first: bin/install-mac HOST.
+set -eu
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+"$ROOT/bin/build"
+cd "$ROOT/pkgbuild"
+makepkg -fsi "$@"
+if [ ! -f "${XDG_CONFIG_HOME:-$HOME/.config}/reminders/config.toml" ]; then
+  echo "Say which Mac in ~/.config/reminders/config.toml first:  host = \"my-mac\""
+fi
+systemctl --user daemon-reload
+systemctl --user enable --now reminders.service
+systemctl --user restart reminders.service

@@ -1,0 +1,27 @@
+# Named reminders-bridge, not reminders: a bare name risks being replaced
+# by an unrelated AUR package of the same name on update.
+pkgname=reminders-bridge
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Apple Reminders on Linux, through a Mac you own (the reminders command and service)'
+arch=('x86_64' 'aarch64')
+url='https://github.com/ctaloi/reminders'
+license=('MIT')
+depends=('openssh' 'libnotify')
+makedepends=()
+source=()
+sha256sums=()
+options=('!debug' '!lto' '!strip')
+
+build() {
+  cd "$startdir/.."
+  ./bin/build
+}
+
+package() {
+  cd "$startdir/.."
+  install -Dm755 build/reminders "$pkgdir/usr/bin/reminders"
+  install -Dm644 "$startdir/reminders.service" "$pkgdir/usr/lib/systemd/user/reminders.service"
+  install -Dm644 "$startdir/reminders.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/reminders.svg"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
