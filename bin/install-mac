@@ -1,0 +1,10 @@
+#!/bin/sh
+# Copies the bridge's source to the Mac and runs its installer there.
+#   bin/install-mac [host]      host: an ssh name (default: $REMINDERS_MAC, else "mac")
+# Anything after the host goes to mac/install.sh (e.g. --uninstall).
+set -eu
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+HOST="${1:-${REMINDERS_MAC:-mac}}"
+[ $# -gt 0 ] && shift
+rsync -a --delete --exclude .build "$ROOT/mac/" "$HOST:.reminders-bridge-src/"
+ssh -t "$HOST" "PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin; cd ~/.reminders-bridge-src && ./install.sh $*"
