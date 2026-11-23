@@ -20,10 +20,11 @@ reminders (service, CLI)  ──ssh──▶  Reminders Bridge  ──EventKit�
   connection open, mirrors every list into `~/.cache/reminders/`, and
   rings desktop notifications for alarms. It's also the command line.
 
-Changes show up both ways within a moment: the bridge tells the service when
+Changes show up both ways within seconds: the bridge tells the service when
 anything in Reminders changes (on the phone, the Mac, anywhere), and the
-service reads it again. It also reads everything every five minutes, in
-case.
+service reads it again. A tick on an iPhone typically lands here in 5 to 15
+seconds, most of it iCloud reaching the Mac. It also reads everything every
+five minutes, in case.
 
 ## Setup
 
