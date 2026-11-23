@@ -21,6 +21,11 @@ import (
 type Engine struct {
 	cfg  Config
 	mu   sync.Mutex
+	// One sync at a time: a write's own and the one the bridge's
+	// "changed" sets off would otherwise race on the same files.
+	syncMu sync.Mutex
+	// One state.json write at a time, in the order the changes happened.
+	stateMu sync.Mutex
 	br   *Bridge
 	st   State
 	snap Snapshot
@@ -133,6 +138,8 @@ func (e *Engine) session(ctx context.Context) error {
 }
 
 func (e *Engine) sync(ctx context.Context, br *Bridge) error {
+	e.syncMu.Lock()
+	defer e.syncMu.Unlock()
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 	raw, err := br.Call(ctx, map[string]any{"op": "lists"})
@@ -217,6 +224,8 @@ func counts(snap Snapshot, now time.Time) (open, overdue, today int) {
 }
 
 func (e *Engine) setState(f func(*State)) {
+	e.stateMu.Lock()
+	defer e.stateMu.Unlock()
 	e.mu.Lock()
 	f(&e.st)
 	e.st.Counts.Open, e.st.Counts.Overdue, e.st.Counts.Today = counts(e.snap, e.now())

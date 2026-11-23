@@ -73,6 +73,7 @@ reminders done REF                     (undone REF puts it back)
 reminders edit REF --due "fri 3pm"     --title --notes --url --list --priority --repeat; "none" clears
 reminders delete REF
 reminders refresh
+reminders call '{"op":"lists"}'       one bridge request as is, for programs (prints {ok, result | code, error})
 ```
 
 - **REF** is an id, the start of one (as `list` shows it), or a title.
@@ -107,6 +108,9 @@ enabled = true
 all_day_at = "09:00"        # "" never rings for day-only reminders
 open = ["my-app", "--reminder", "{id}"]   # adds an Open button
 ```
+
+`$REMINDERS_OPEN` sets `open` too (words split on spaces), so a package can
+add the button with a systemd drop-in instead of touching this file.
 
 `command = ["ssh", …]` replaces the whole command that reaches the bridge,
 for anything unusual.

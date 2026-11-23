@@ -50,6 +50,8 @@ func main() {
 		err = deleteCmd(args)
 	case "refresh":
 		_, err = call(map[string]any{"op": "refresh"})
+	case "call":
+		err = callCmd(args)
 	case "version", "--version":
 		fmt.Println("reminders", version)
 	case "help", "-h", "--help":
@@ -79,6 +81,8 @@ func usage() {
            [--priority P|none] [--repeat R|none] [--json]
   delete REF
   refresh                      ask the Mac for everything now
+  call JSON                    one bridge request, as is; prints {ok, result | code, error}
+                               (exits 0 when the bridge answered, even with an error)
 
 REF is an id, the start of one (4+ characters), or a title.
 WHEN is like: today, tomorrow 9am, fri 3pm, nov 28, 11/28 5pm, in 2h, 2026-12-01.
@@ -690,4 +694,30 @@ func deleteCmd(in []string) error {
 	}
 	fmt.Printf("Deleted %s: %s\n", shortID(r.ID), r.Title)
 	return nil
+}
+
+// callCmd is for programs (a window): one bridge request in, the whole
+// answer out, so the caller can act on its code.
+func callCmd(in []string) error {
+	if len(in) != 1 {
+		return errors.New("call takes one JSON object: reminders call '{\"op\":\"lists\"}'")
+	}
+	var req map[string]any
+	if err := json.Unmarshal([]byte(in[0]), &req); err != nil {
+		return fmt.Errorf("not a JSON object: %w", err)
+	}
+	if op, _ := req["op"].(string); !allowedOps[op] {
+		return printJSON(callResult{Code: "bad", Error: fmt.Sprintf("no such op: %v", req["op"])})
+	}
+	raw, err := call(req)
+	var be *BridgeError
+	switch {
+	case err == nil:
+		return printJSON(callResult{OK: true, Result: raw})
+	case errors.As(err, &be):
+		return printJSON(callResult{Code: be.Code, Error: be.Message})
+	default:
+		// No answer at all: the Mac out of reach, no service and no ssh.
+		return printJSON(callResult{Code: "offline", Error: err.Error()})
+	}
 }

@@ -88,6 +88,7 @@ type Config struct {
 		// ("09:00", like Reminders' Today Notification; "" for never).
 		AllDayAt *string `toml:"all_day_at"`
 		// Run for a notification's Open button; {id} is the reminder's id.
+		// $REMINDERS_OPEN (words split on spaces) sets it too.
 		Open []string `toml:"open"`
 	} `toml:"notify"`
 }
@@ -148,6 +149,9 @@ func loadConfig() (Config, error) {
 	if c.Host == "" {
 		c.Host = "mac"
 	}
+	if o := os.Getenv("REMINDERS_OPEN"); o != "" && len(c.Notify.Open) == 0 {
+		c.Notify.Open = strings.Fields(o)
+	}
 	return c, nil
 }
 
@@ -173,11 +177,26 @@ func writeJSON(path string, v any) error {
 	if err != nil {
 		return err
 	}
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, b, 0o600); err != nil {
+	// A temp file of its own each time: two writers never share one, and a
+	// reader only ever sees a whole file.
+	f, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*")
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmp, path)
+	if _, err := f.Write(b); err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return err
+	}
+	if err := f.Close(); err != nil {
+		os.Remove(f.Name())
+		return err
+	}
+	if err := os.Rename(f.Name(), path); err != nil {
+		os.Remove(f.Name())
+		return err
+	}
+	return nil
 }
 
 func readJSON(path string, v any) error {
